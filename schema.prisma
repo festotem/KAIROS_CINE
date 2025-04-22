@@ -1,0 +1,167 @@
+// Este arquivo define os modelos Prisma para o banco de dados
+// Será usado pelo ORM Prisma para criar e gerenciar o banco de dados
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cliente {
+  id                String       @id @default(uuid())
+  titulo            String
+  produtora         String
+  contato_nome      String
+  contato_telefone  String
+  contato_email     String
+  formato           String
+  camera            String?
+  resolucao         String?
+  codec             String?
+  duracao_minutos   Int?
+  numero_episodios  Int?
+  temporada         Int?
+  canal             String?
+  data_criacao      DateTime     @default(now())
+  data_atualizacao  DateTime     @updatedAt
+  
+  orcamentos        Orcamento[]
+  cronogramas       Cronograma[]
+  projetoColaboradores ProjetoColaborador[]
+}
+
+model Colaborador {
+  id                  String       @id @default(uuid())
+  funcao              String
+  nome_artistico      String?
+  nome_completo       String
+  data_nascimento     DateTime?
+  endereco            String?
+  bairro              String?
+  cidade              String?
+  estado              String?
+  cep                 String?
+  telefone_celular    String
+  telefone_fixo       String?
+  email               String
+  nome_empresarial    String?
+  cnpj                String?
+  endereco_empresarial String?
+  representante_nome  String?
+  representante_rg    String?
+  representante_cpf   String?
+  banco               String?
+  agencia             String?
+  conta               String?
+  pix                 String?
+  data_criacao        DateTime     @default(now())
+  data_atualizacao    DateTime     @updatedAt
+  
+  projetoColaboradores ProjetoColaborador[]
+  tarefasCronograma    TarefaCronograma[]
+}
+
+model ProjetoColaborador {
+  id                  String       @id @default(uuid())
+  projeto_id          String
+  colaborador_id      String
+  descricao_servicos  String?
+  dias_por_semana     Int?
+  horario_trabalho    String?
+  local_prestacao     String?
+  data_inicio         DateTime?
+  data_termino        DateTime?
+  valor_total         Decimal?     @db.Decimal(10, 2)
+  data_criacao        DateTime     @default(now())
+  data_atualizacao    DateTime     @updatedAt
+  
+  projeto             Cliente      @relation(fields: [projeto_id], references: [id])
+  colaborador         Colaborador  @relation(fields: [colaborador_id], references: [id])
+  pagamentos          PagamentoColaborador[]
+}
+
+model PagamentoColaborador {
+  id                    String       @id @default(uuid())
+  projeto_colaborador_id String
+  data_pagamento        DateTime
+  valor                 Decimal      @db.Decimal(10, 2)
+  status                String       // Pendente, Pago, Cancelado
+  data_criacao          DateTime     @default(now())
+  data_atualizacao      DateTime     @updatedAt
+  
+  projetoColaborador    ProjetoColaborador @relation(fields: [projeto_colaborador_id], references: [id])
+}
+
+model Orcamento {
+  id                String       @id @default(uuid())
+  projeto_id        String
+  data_orcamento    DateTime
+  valor_total       Decimal      @db.Decimal(10, 2)
+  status            String       // Rascunho, Enviado, Aprovado, Rejeitado
+  data_criacao      DateTime     @default(now())
+  data_atualizacao  DateTime     @updatedAt
+  
+  projeto           Cliente      @relation(fields: [projeto_id], references: [id])
+  itens             ItemOrcamento[]
+}
+
+model CategoriaOrcamento {
+  id                String       @id @default(uuid())
+  codigo            String
+  nome              String
+  data_criacao      DateTime     @default(now())
+  data_atualizacao  DateTime     @updatedAt
+  
+  itens             ItemOrcamento[]
+}
+
+model ItemOrcamento {
+  id                String       @id @default(uuid())
+  orcamento_id      String
+  categoria_id      String
+  codigo            String
+  descricao         String
+  multiplicador     Decimal?     @db.Decimal(10, 2)
+  quantidade        Decimal      @db.Decimal(10, 2)
+  unidade           String
+  valor_unitario    Decimal      @db.Decimal(10, 2)
+  valor_total       Decimal      @db.Decimal(10, 2)
+  data_criacao      DateTime     @default(now())
+  data_atualizacao  DateTime     @updatedAt
+  
+  orcamento         Orcamento    @relation(fields: [orcamento_id], references: [id])
+  categoria         CategoriaOrcamento @relation(fields: [categoria_id], references: [id])
+}
+
+model Cronograma {
+  id                String       @id @default(uuid())
+  projeto_id        String
+  nome              String
+  data_inicio       DateTime
+  data_fim          DateTime
+  data_criacao      DateTime     @default(now())
+  data_atualizacao  DateTime     @updatedAt
+  
+  projeto           Cliente      @relation(fields: [projeto_id], references: [id])
+  tarefas           TarefaCronograma[]
+}
+
+model TarefaCronograma {
+  id                    String       @id @default(uuid())
+  cronograma_id         String
+  nome                  String
+  descricao             String?
+  data_inicio           DateTime
+  data_fim              DateTime
+  responsavel_id        String?
+  status                String       // Não iniciada, Em andamento, Concluída
+  porcentagem_conclusao Int          @default(0)
+  data_criacao          DateTime     @default(now())
+  data_atualizacao      DateTime     @updatedAt
+  
+  cronograma            Cronograma   @relation(fields: [cronograma_id], references: [id])
+  responsavel           Colaborador? @relation(fields: [responsavel_id], references: [id])
+}

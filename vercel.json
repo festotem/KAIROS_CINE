@@ -1,0 +1,14 @@
+// Configuração para implantação na Vercel
+{
+  "name": "projeto-audiovisual",
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "postgresql://user:password@neon.tech:5432/audiovisual_db"
+  }
+}
